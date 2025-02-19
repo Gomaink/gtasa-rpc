@@ -2,14 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <windows.h>
+
 #include <discord_rpc.h>
+#include "samemory.h"
 
 #ifdef _WIN32
     #include <windows.h>
-    #define SLEEP_FUNC Sleep(1000)  // Windows usa Sleep em milissegundos
+    #define SLEEP_FUNC Sleep(1000)
 #else
     #include <unistd.h>
-    #define SLEEP_FUNC sleep(1)  // Linux usa sleep em segundos
+    #define SLEEP_FUNC sleep(1)
 #endif
 
 void handleDiscordReady(const DiscordUser* user) {
@@ -33,15 +38,47 @@ int main() {
 
     Discord_Initialize("1338607854659178547", &handlers, 1, NULL);
 
+    const char* processName = "gta_sa.exe";
+
+    DWORD processId = GetProcessIdByName(processName);
+    if (processId == 0) {
+        fprintf(stderr, "GTA: San Andreas is not running.\n");
+        return 1;
+    }
+
+    HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, processId);
+    if (hProcess == NULL) {
+        fprintf(stderr, "Failed to open GTA San Andreas.\n");
+        return 1;
+    }
+
+    float x, y, z;
+    GetPlayerPosition(hProcess, &x, &y, &z);
+    int playerMoney = GetPlayerMoney(hProcess);
+    int playerWanted = GetPlayerWantedLevel(hProcess);
+    int playerWeapon = GetPlayerWeapon(hProcess);
+    int playerVehicle = GetPlayerVehicle(hProcess);
+    float playerHealth = GetPlayerHealth(hProcess);
+    float playerMaxHealth = GetPlayerMaxHealth(hProcess);
+    float playerArmour = GetPlayerArmour(hProcess);
+    bool playerInVehicle = IsPlayerInVehicle(hProcess);
+
     DiscordRichPresence presence;
     memset(&presence, 0, sizeof(presence));
-    presence.state = "$3000";
-    presence.details = "Vinewood (In vehicle)";
+
+    char formatedText[32];  
+    sprintf(formatedText, "$%d", playerMoney);
+    presence.state = formatedText;
+    presence.details = getPlayerZone(x, y, z);
+
     presence.startTimestamp = time(NULL);
     presence.largeImageKey = "sa-logo";
-    presence.largeImageText = "Launcher Alternativo";
+
+    sprintf(formatedText, "Wanted Level: %d", playerWanted);
+    presence.largeImageText = formatedText;
 
     Discord_UpdatePresence(&presence);
+    CloseHandle(hProcess);
 
     while (1) {
         Discord_RunCallbacks();
