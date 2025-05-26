@@ -18,15 +18,15 @@
 #endif
 
 void handleDiscordReady(const DiscordUser* user) {
-    printf("Conectado como %s#%s\n", user->username, user->discriminator);
+    printf("Connected as %s#%s\n", user->username, user->discriminator);
 }
 
 void handleDiscordError(int code, const char* message) {
-    printf("Erro %d: %s\n", code, message);
+    printf("Error %d: %s\n", code, message);
 }
 
 void handleDiscordDisconnected(int code, const char* message) {
-    printf("Desconectado %d: %s\n", code, message);
+    printf("Disconnected %d: %s\n", code, message);
 }
 
 int main() {
@@ -55,7 +55,7 @@ int main() {
     DiscordRichPresence presence;
     memset(&presence, 0, sizeof(presence));
 
-    presence.startTimestamp = time(NULL);  // timestamp inicial
+    presence.startTimestamp = time(NULL);
 
     while (1) {
         Discord_RunCallbacks();
@@ -80,7 +80,7 @@ int main() {
         presence.largeImageKey = "sa-logo";
         presence.largeImageText = largeImageText;
         presence.smallImageKey = weaponText;
-        presence.smallImageText = largeImageText;
+        presence.smallImageText = GetWeaponName(playerWeapon);
 
         Discord_UpdatePresence(&presence);
 
