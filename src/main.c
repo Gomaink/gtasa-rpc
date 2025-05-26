@@ -52,39 +52,42 @@ int main() {
         return 1;
     }
 
-    float x, y, z;
-    GetPlayerPosition(hProcess, &x, &y, &z);
-    int playerMoney = GetPlayerMoney(hProcess);
-    int playerWanted = GetPlayerWantedLevel(hProcess);
-    int playerWeapon = GetPlayerWeapon(hProcess);
-    int playerVehicle = GetPlayerVehicle(hProcess);
-    float playerHealth = GetPlayerHealth(hProcess);
-    float playerMaxHealth = GetPlayerMaxHealth(hProcess);
-    float playerArmour = GetPlayerArmour(hProcess);
-    bool playerInVehicle = IsPlayerInVehicle(hProcess);
-
     DiscordRichPresence presence;
     memset(&presence, 0, sizeof(presence));
 
-    char formatedText[32];  
-    sprintf(formatedText, "$%d", playerMoney);
-    presence.state = formatedText;
-    presence.details = getPlayerZone(x, y, z);
-
-    presence.startTimestamp = time(NULL);
-    presence.largeImageKey = "sa-logo";
-
-    sprintf(formatedText, "Wanted Level: %d", playerWanted);
-    presence.largeImageText = formatedText;
-
-    Discord_UpdatePresence(&presence);
-    CloseHandle(hProcess);
+    presence.startTimestamp = time(NULL);  // timestamp inicial
 
     while (1) {
         Discord_RunCallbacks();
+
+        float x, y, z;
+        GetPlayerPosition(hProcess, &x, &y, &z);
+        int playerMoney = GetPlayerMoney(hProcess);
+        int playerWanted = GetPlayerWantedLevel(hProcess);
+        int playerWeapon = GetPlayerWeapon(hProcess);
+        bool playerInVehicle = IsPlayerInVehicle(hProcess);
+
+        char stateText[32], largeImageText[32], weaponText[32];
+        sprintf(stateText, "$%d", playerMoney);
+        sprintf(weaponText, "%d", playerWeapon);
+        sprintf(largeImageText, "%s", playerInVehicle ? "In a vehicle." : "On foot.");
+
+        memset(&presence, 0, sizeof(presence));
+
+        presence.state = stateText;
+        presence.details = getPlayerZone(x, y, z);
+        presence.startTimestamp = time(NULL);
+        presence.largeImageKey = "sa-logo";
+        presence.largeImageText = largeImageText;
+        presence.smallImageKey = weaponText;
+        presence.smallImageText = largeImageText;
+
+        Discord_UpdatePresence(&presence);
+
         SLEEP_FUNC;
     }
 
+    CloseHandle(hProcess);
     Discord_Shutdown();
     return 0;
 }
