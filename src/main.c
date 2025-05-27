@@ -4,10 +4,6 @@
 #include <time.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <windows.h>
-
-#include <discord_rpc.h>
-#include "samemory.h"
 
 #ifdef _WIN32
     #include <windows.h>
@@ -17,15 +13,18 @@
     #define SLEEP_FUNC sleep(1)
 #endif
 
-void handleDiscordReady(const DiscordUser* user) {
+#include <discord_rpc.h>
+#include "samemory.h"
+
+static void handleDiscordReady(const DiscordUser* user) {
     printf("Connected as %s#%s\n", user->username, user->discriminator);
 }
 
-void handleDiscordError(int code, const char* message) {
+static void handleDiscordError(int code, const char* message) {
     printf("Error %d: %s\n", code, message);
 }
 
-void handleDiscordDisconnected(int code, const char* message) {
+static void handleDiscordDisconnected(int code, const char* message) {
     printf("Disconnected %d: %s\n", code, message);
 }
 
@@ -43,18 +42,19 @@ int main() {
     DWORD processId = GetProcessIdByName(processName);
     if (processId == 0) {
         fprintf(stderr, "GTA: San Andreas is not running.\n");
+        Discord_Shutdown();
         return 1;
     }
 
     HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, processId);
     if (hProcess == NULL) {
         fprintf(stderr, "Failed to open GTA San Andreas.\n");
+        Discord_Shutdown();
         return 1;
     }
 
     DiscordRichPresence presence;
     memset(&presence, 0, sizeof(presence));
-
     presence.startTimestamp = time(NULL);
 
     while (1) {
@@ -67,16 +67,15 @@ int main() {
         int playerWeapon = GetPlayerWeapon(hProcess);
         bool playerInVehicle = IsPlayerInVehicle(hProcess);
 
-        char stateText[32], largeImageText[32], weaponText[32];
-        sprintf(stateText, "$%d", playerMoney);
-        sprintf(weaponText, "%d", playerWeapon);
-        sprintf(largeImageText, "%s", playerInVehicle ? "In a vehicle." : "On foot.");
+        char stateText[32], largeImageText[32], weaponText[32], zoneText[64];;
+        getPlayerZone(x, y, z, zoneText, sizeof(zoneText));
 
-        memset(&presence, 0, sizeof(presence));
+        snprintf(stateText, sizeof(stateText), "$%d", playerMoney);
+        snprintf(weaponText, sizeof(weaponText), "%d", playerWeapon);
+        snprintf(largeImageText, sizeof(largeImageText), "%s", playerInVehicle ? "In a vehicle." : "On foot.");
 
         presence.state = stateText;
-        presence.details = getPlayerZone(x, y, z);
-        presence.startTimestamp = time(NULL);
+        presence.details = zoneText;
         presence.largeImageKey = "sa-logo";
         presence.largeImageText = largeImageText;
         presence.smallImageKey = weaponText;

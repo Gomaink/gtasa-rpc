@@ -4,6 +4,8 @@ project(DiscordRichPresence C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 set(DISCORD_SDK_PATH "${CMAKE_SOURCE_DIR}/libs/discord_sdk")
 set(SAMEMORY_PATH "${CMAKE_SOURCE_DIR}/libs/samemory")
 
@@ -19,11 +21,18 @@ elseif(UNIX)
     set(DISCORD_LIB discord-rpc)
 endif()
 
-include_directories(${DISCORD_SDK_PATH}/include ${CMAKE_SOURCE_DIR}/libs/samemory ${CMAKE_SOURCE_DIR}/include)
+include_directories(
+    ${DISCORD_SDK_PATH}/include
+    ${CMAKE_SOURCE_DIR}/libs/samemory
+    ${CMAKE_SOURCE_DIR}/include
+)
 
-link_directories(${DISCORD_SDK_PATH}/lib ${SAMEMORY_PATH}/lib)
+link_directories(
+    ${DISCORD_SDK_PATH}/lib
+    ${SAMEMORY_PATH}/lib
+)
 
-add_executable(DiscordRichPresence 
+add_executable(DiscordRichPresence
     src/main.c 
     libs/samemory/process_utils.c 
     libs/samemory/addresses.c 

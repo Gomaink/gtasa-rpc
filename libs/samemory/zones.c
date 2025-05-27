@@ -1,4 +1,6 @@
 #include "zones.h"
+#include <stdio.h>
+#include <stddef.h>
 
 SAZone gSAZones[366] = {
     {"The Big Ear",	                {-410.00,1403.30,-3.00,-137.90,1681.20,200.00}},
@@ -369,7 +371,7 @@ SAZone gSAZones[366] = {
 	{"Whetstone",                   {-2997.40,-2892.90,-242.90,-1213.90,-1115.50,900.00}}
 };
 
-const char* getPlayerZone(float x, float y, float z) {
+void getPlayerZone(float x, float y, float z, char* buffer, size_t bufferSize) {
     int numZones = sizeof(gSAZones) / sizeof(gSAZones[0]);
     for (int i = 0; i < numZones; i++) {
         float zoneMinX = gSAZones[i].area[0];
@@ -382,8 +384,10 @@ const char* getPlayerZone(float x, float y, float z) {
         if (x >= zoneMinX && x <= zoneMaxX &&
             y >= zoneMinY && y <= zoneMaxY &&
             z >= zoneMinZ && z <= zoneMaxZ) {
-            return gSAZones[i].name;
+            snprintf(buffer, bufferSize, "%s", gSAZones[i].name);
+            return;
         }
     }
-    return "Unknown Zone";
+    snprintf(buffer, bufferSize, "Unknown Zone");
 }
+
